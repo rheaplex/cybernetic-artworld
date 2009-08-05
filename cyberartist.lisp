@@ -27,7 +27,6 @@
 (defun make-microblog-bot ()
   "Make the bot."
   (assert (>= (length sb-ext:*posix-argv*) 2))
-  (setf *random-state* (make-random-state t))
   (microblog-bot:set-microblog-service "https://identi.ca/api" "cybernetic")
   (make-instance 'cyberartist
 		 :nickname (second sb-ext:*posix-argv*)
@@ -37,9 +36,20 @@
 
 (defun run ()
   "Configure and run the bot."
+  (setf *random-state* (make-random-state t))
   (microblog-bot:run-bot (make-microblog-bot)))
 
 (defun run-once ()
   "Configure and run the bot just once."
+  (setf *random-state* (make-random-state t))
   (microblog-bot:run-bot-once (make-microblog-bot))
+  (sb-ext:quit))
+
+(defun run-once-randomly ()
+  "Configure and run the bot just once, every few runs."
+  (assert (>= (length sb-ext:*posix-argv*) 3))
+  (setf *random-state* (make-random-state t))
+  (let ((num (parse-integer (fourth sb-ext:*posix-argv*))))
+    (when (< (random num) 1)
+      (microblog-bot:run-bot-once (make-microblog-bot))))
   (sb-ext:quit))

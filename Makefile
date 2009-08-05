@@ -26,7 +26,7 @@ cyberartist:	aesthetic-package.lisp \
 	--eval "(asdf:oos 'asdf:load-op 'cyberartist)" \
 	--eval "(sb-ext:save-lisp-and-die \"cyberartist\" \
                                   	  :executable t \
-                                          :toplevel #'cyberartist:run-once)"
+                                          :toplevel #'cyberartist:run-once-randomly)"
 
 cybercurator:	aesthetic-package.lisp \
 		aesthetic.lisp \
