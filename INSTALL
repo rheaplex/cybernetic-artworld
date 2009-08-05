@@ -1,0 +1,14 @@
+* General
+
+Make sure you have sbcl installed -
+
+http://www.sbcl.org/
+
+To make, run make.
+
+* Cybernetic Artist
+
+To run, call cyberartist with the identi.ca usrname and password for the
+account you wish to post to as the first and second arguments. 
+
+e.g. ./cyberartist username password
