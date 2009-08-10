@@ -19,5 +19,6 @@
   (:documentation
    "Aesthetic generation, mutation and evaluation.")
   (:use #:common-lisp)
-  (:export generate-description
+  (:export make-aesthetic
+	   generate-description
 	   critique-artwork))

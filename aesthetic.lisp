@@ -18,7 +18,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utilities
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;t;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun maybe (fun &key (probability 0.5) (default nil))
   "Call fun with aqrgs if random(0..1) is less than probability."
@@ -139,9 +139,12 @@
 (defparameter tone '("pale" "" "rich" "bright" "" "dark"))
 
 (defun colour ()
+  "Choose a flat colour from a palette"
+  (choose-randomly-deep palettes))
+
+(defun colour-description ()
   "Generate a colour description."
-  (concatenate-string (choose-randomly tone)
-		      (choose-randomly-deep palettes)))
+  (concatenate-string (choose-randomly tone) (palette-colour) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Texture
@@ -159,7 +162,7 @@
 (defun appearance ()
   "Generate the appearance of a figure."
   (concatenate-string (maybe #'texture :default "")
-		      (colour)))
+		      (colour-description)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Shape
@@ -191,7 +194,12 @@
     (concatenate-string (choose-randomly generic-shape-treatments)
 		 (pluralise (choose-randomly-deep generic-shapes) plural)))))
 
-(defun shape (plural)
+(defun shape ()
+  (if (> (random 1.0) 0.5)
+      (choose-randomly-deep abstract-shapes)
+      (choose-randomly-deep generic-shapes)))
+
+(defun shape-description (plural)
   "Generate a shape description."
   (concatenate-string (shape-size)
 		      (appearance)
@@ -212,22 +220,19 @@
 (defun generate-description ()
   "Describe a single (set of) figure(s) on a single ground."
   (let ((plural (amount)))
-    (concatenate-string plural (shape plural)
+    (concatenate-string plural (shape-description plural)
 			"on a" (ground) "ground.")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Aesthetics
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *aesthetic* (make-hash-table :test 'equal)
-  "The properties of the aesthetic that the critic currently adheres to.")
-
-(defun list-aesthetic ()
+(defun list-aesthetic (aesthetic)
   "Gather the property names without their values."
-  (loop for key being each hash-key of *aesthetic*
+  (loop for key being each hash-key of aesthetic
        collect key))
 
-(defun aesthetic-opinions ()
+(defun aesthetic-opinions (aesthetic)
   "Sort the properties into likes and dislikes."
   (let ((likes '())
 	(dislikes '()))
@@ -235,7 +240,7 @@
 		 (if (>= val 0.0)
 		     (push key likes)
 		     (push key dislikes))) 
-     *aesthetic*)
+     aesthetic)
     (values likes dislikes)))
 
 (defun describe-aesthetic ()
@@ -244,9 +249,9 @@
   (multiple-value-bind (likes dislikes) (aesthetic-opinions)
     (format nil "I like~{ ~A~^,~}. I dislike~{ ~A~^,~}." likes dislikes)))
 
-(defun aesthetic-size ()
+(defun aesthetic-size (aesthetic)
   "Get the current size of *aesthetic*."
-  (hash-table-count *aesthetic*))
+  (hash-table-count aesthetic))
 
 (defun new-property ()
   "Choose a new property."
@@ -257,61 +262,63 @@
   (loop for i below count
        collect (new-property)))
 
-(defun set-property (prop)
+(defun set-property (aesthetic prop)
   "Set valenced property."
-    (setf (gethash prop *aesthetic*)
+    (setf (gethash prop aesthetic)
 	  (plus-or-minus-one)))
 
-(defun set-properties (props)
+(defun set-properties (aesthetic props)
   "Set valenced properties."
   (dolist (prop props)
-    (set-property prop)))
+    (set-property aesthetic prop))
+  aesthetic)
 
-(defparameter +min-properties+ 1)
+(defparameter +min-properties+ 4)
 
 (defparameter +max-properties+ 12)
 
-(defun initialize-aesthetic ()
+(defun make-aesthetic ()
   "Generate an initial set of properties."
-  (setf *aesthetic* (make-hash-table :test 'equal))
-  (set-properties (new-properties (random-range +min-properties+
+  (set-properties (make-hash-table :test 'equal)
+		  (new-properties (random-range +min-properties+
 						+max-properties+))))
 
 (defparameter +max-properties-to-delete+ 2)
 (defparameter +max-properties-to-mutate+ 2)
 (defparameter +max-properties-to-add+ 2)
 
-(defun delete-properties ()
+(defun delete-properties (aesthetic)
   "Delete 0+ properties, don't reduce properties below +min-properties+."
   ;;FIXME - Set the correct number here rather than checking with when
   (dolist (prop (choose-n-of (random +max-properties-to-mutate+)
-			     (list-aesthetic)))
-    (when (> (aesthetic-size) +min-properties+) 
-	       (remhash prop *aesthetic*))))
+			     (list-aesthetic aesthetic)))
+    (when (> (aesthetic-size aesthetic) +min-properties+) 
+	       (remhash prop aesthetic)))
+  aesthetic)
 
-(defun mutate-properties ()
+(defun mutate-properties (aesthetic)
   "Mutate zero or more properties."
   (dolist (prop (choose-n-of (random +max-properties-to-mutate+)
-			     (list-aesthetic)))
-    (setf (gethash prop *aesthetic*)
-	  (- (gethash prop *aesthetic*))))) 
+			     (list-aesthetic aesthetic)))
+    (setf (gethash prop aesthetic)
+	  (- (gethash prop aesthetic))))
+  aesthetic) 
 
-(defun add-properties ()
+(defun add-properties (aesthetic)
   "Add zero or more properties."
   (loop with remaining = (min (max +min-properties+ 
 				   (random +max-properties-to-add+))
-			      (- +max-properties+ (aesthetic-size)))
+			      (- +max-properties+ (aesthetic-size aesthetic)))
 	while (> remaining 0)
 	do (let ((prop (new-property)))
-	     (when (not (gethash prop *aesthetic*))
-	       (set-property prop)
-	       (decf remaining)))))
+	     (when (not (gethash prop aesthetic))
+	       (set-property aesthetic prop)
+	       (decf remaining))))
+  aesthetic)
 
-(defun update-aesthetic ()
+(defun update-aesthetic (aesthetic)
   "Update the aesthetic."
-  (delete-properties)
-  (mutate-properties)
-  (add-properties))
+  (add-properties (mutate-properties(delete-properties aesthetic))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Critique
@@ -324,39 +331,12 @@
 ;; But what if that creates bogus sequences? Break into substrings?
 ;; Just always hypenate multi-word sequences?
 
-(defun score-artwork (artwork)
+#|(defun score-artwork (artwork aesthetic)
   "Process the string description of the artwork to generate a score."
   (let ((clean-artwork (string-downcase artwork)))
     (loop for prop being each hash-key of *aesthetic*
        if (search prop clean-artwork)
-       sum (gethash prop *aesthetic* 0))))
-
-(defun positive-aesthetic-value (aesthetic-list aesthetic-hash)
-  "Sum the positive value of the work under the aesthetic"
-  (let ((total 0.0)) 
-    (dolist (key aesthetic-list) 
-      (let ((aesthetic-weight (gethash key aesthetic-hash 0.0)))
-	(when (> aesthetic-weight 0.0)
-	  (incf total aesthetic-weight))))
-    total))
-
-(defun negative-aesthetic-value (aesthetic-list aesthetic-hash)
-  "Sum the negative value of the work under the aesthetic"
-  (let ((total 0.0)) 
-    (dolist (key aesthetic-list) 
-      (let ((aesthetic-weight (gethash key aesthetic-hash 0.0)))
-	(when (< aesthetic-weight 0.0)
-	  (incf total aesthetic-weight))))
-    total))
-
-(defun total-aesthetic-value (aesthetic-list aesthetic-hash)
-  "Sum the value of the work under the aesthetic"
-  (let ((total 0.0)) 
-    (dolist (key aesthetic-list) 
-      (let ((aesthetic-weight (gethash key aesthetic-hash 0.0)))
-	(when (\= aesthetic-weight 0.0)
-	  (incf total aesthetic-weight))))
-    total))
+       sum (gethash prop *aesthetic* 0.0))))
 
 (defun evaluate-artwork (artwork)
   "Set range to max of +/-1, probably less."
@@ -371,27 +351,66 @@
     ((< score 0.1) "ok")
     ((< score 0.6) "good")
     (t "excellent")))
+|#
+
+(defun positive-aesthetic-value (description aesthetic)
+  "Sum the positive value of the work under the aesthetic"
+  (let ((clean-artwork (string-downcase description))
+	(positive-value))
+    (maphash #'(lambda (key val) 
+		 (when (and (search key clean-artwork)
+			    (> val 0.0))
+		   (incf positive-value val)))
+	     aesthetic)
+    positive-value))
+
+(defun negative-aesthetic-value (description aesthetic)
+  "Sum the negative value of the work under the aesthetic"
+  (let ((clean-artwork (string-downcase description))
+	(negative-value))
+    (maphash #'(lambda (key val) 
+		 (when (and (search key clean-artwork)
+			    (> val 0.0))
+		   (decf negative-value val)))
+	     aesthetic)
+    negative-value))
+
+(defun total-aesthetic-values (description aesthetic)
+  "Sum the values of the work under the aesthetic"
+  (let ((clean-artwork (string-downcase description))
+	(+total 0.0)
+	(-total 0.0))
+    (maphash #'(lambda (key val) 
+		 (when (search key clean-artwork)
+		   (cond 
+		     ((> val 0.0)
+		      (incf +total val))
+		     ((< val 0.0)
+		      (decf -total val)))))
+	     aesthetic)
+    (values +total -total)))
 
 (defun describe-aesthetic-value (negative positive)
+  "Describe the value of the work allowing for pos & neg points."
   (cond 
-    ;; If negative >= 2 x positive, terrible
-    ;; If negative > positive, bad
-    ;; If  >= 2 x positive, terrible
-    ;; If positive > negative, good
-    ;; If positive >= 2 x negative, great
+    ((and (>= positive 2) (= negative 0)) "a masterpiece")
+    ((and (>= negative 2) (= positive 0)) "a failure")
+    ((> positive negative) "good")
+    ((> negative positive) "bad")
+    ((and (= negative positive) (>= negative 2)) "extremely mixed")
+    ((= negative positive 1) "mixed")
+    (t "uninteresting")))
 
-    ;; Or Equivocate, subtract negative from positive, then on balance...
-    ;; Or "there's some good colour, some awful colour, on balance it's OK."
-    (nil nil)))
-
-(defun critique-artwork (description identifier)
+(defun critique-artwork (description aesthetic identifier)
   "Verbally critique the artwork."
-  (format nil 
-	  "~a ~a is ~a." 
-	  (choose-one-of '("I think that" "In my opinion," "I would say that"
-			   "Aesthetically speaking," ))
-	  identifier
-	  (describe-artwork-evaluation (evaluate-artwork description))))
+  (multiple-value-bind (+val -val) 
+			(total-aesthetic-values description aesthetic)
+    (format nil 
+	    "~a ~a is ~a."
+	    (choose-one-of '("I think that" "In my opinion," "I would say that"
+			     "Aesthetically speaking," ))
+	    identifier
+	    (describe-aesthetic-value +val -val))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Similarity, strength of resemblance
