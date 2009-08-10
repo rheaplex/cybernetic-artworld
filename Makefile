@@ -26,7 +26,7 @@ cyberartist:	aesthetic-package.lisp \
 	--eval "(asdf:oos 'asdf:load-op 'cyberartist)" \
 	--eval "(sb-ext:save-lisp-and-die \"cyberartist\" \
                                   	  :executable t \
-                                          :toplevel #'cyberartist:run-once-randomly)"
+                                          :toplevel #'cyberartist:run)"
 
 cybercurator:	aesthetic-package.lisp \
 		aesthetic.lisp \
@@ -38,7 +38,7 @@ cybercurator:	aesthetic-package.lisp \
 	--eval "(asdf:oos 'asdf:load-op 'cybercurator)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercurator\" \
                                   	  :executable t \
-                                          :toplevel #'cybercurator:run-once)"
+                                          :toplevel #'cybercurator:run)"
 
 cybercritic:	aesthetic-package.lisp \
 		aesthetic.lisp \
@@ -50,7 +50,7 @@ cybercritic:	aesthetic-package.lisp \
 	--eval "(asdf:oos 'asdf:load-op 'cybercritic)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercritic\" \
                                   	  :executable t \
-                                          :toplevel #'cybercritic:run-once)"
+                                          :toplevel #'cybercritic:run)"
 
 cybercollector:	aesthetic-package.lisp \
 		aesthetic.lisp \
@@ -62,7 +62,7 @@ cybercollector:	aesthetic-package.lisp \
 	--eval "(asdf:oos 'asdf:load-op 'cybercollector)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercollector\" \
                                   	  :executable t \
-                                          :toplevel #'cybercollector:run-once)"
+                                          :toplevel #'cybercollector:run)"
 
 all: cyberartist cybercurator cybercritic cybercollector
 

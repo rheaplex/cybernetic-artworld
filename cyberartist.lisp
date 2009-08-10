@@ -14,7 +14,6 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 (in-package #:cyberartist)
 
 (defclass cyberartist (microblog-bot:microblog-bot)
@@ -22,33 +21,58 @@
 
 (defmethod microblog-bot:constant-task ((bot cyberartist))
   "Dent a possible artwork."
-    (twit:update (generate-description)))
+    (microblog-bot:post (generate-description)))
+
+(defvar *username* nil)
+(defvar *password* nil)
+
+(defun configure (username password)
+  "Configure the global state."
+  (setf *random-state* (make-random-state t))
+  (microblog-bot:set-microblog-service "https://identi.ca/api" "cybernetic")
+  (setf *username* username)
+  (setf *password* password))
+
+(defun cli-configure ()
+  "Configure from the command line arguments."
+  (assert (>= (length sb-ext:*posix-argv*) 2))
+  (configure (second sb-ext:*posix-argv*)
+	     (third sb-ext:*posix-argv*)))
+
+(defun debug-configure (username password)
+  "Configure from the repl, and set the state to debugging."
+  (microblog-bot:set-debug)
+  (configure username password))
 
 (defun make-microblog-bot ()
   "Make the bot."
-  (assert (>= (length sb-ext:*posix-argv*) 2))
-  (microblog-bot:set-microblog-service "https://identi.ca/api" "cybernetic")
+  (assert (and *username* *password*))
   (make-instance 'cyberartist
-		 :nickname (second sb-ext:*posix-argv*)
-		 :password (third sb-ext:*posix-argv*)
+		 :nickname *username*
+		 :password *password*
 		 :ignore '("cybercritic")
 		 :source-url "http://robmyers.org/git/?p=cybernetic-artworld.git"))
 
 (defun run ()
   "Configure and run the bot."
-  (setf *random-state* (make-random-state t))
+  (cli-configure)
   (microblog-bot:run-bot (make-microblog-bot)))
 
+(defun run-n (n)
+  "Run the bot n times."
+  (let ((bot (make-microblog-bot)))
+    (dotimes (i n)
+      (microblog-bot:run-bot-once bot))))
+
 (defun run-once ()
-  "Configure and run the bot just once."
-  (setf *random-state* (make-random-state t))
+  "Run the bot just once."
   (microblog-bot:run-bot-once (make-microblog-bot))
   (sb-ext:quit))
 
 (defun run-once-randomly ()
-  "Configure and run the bot just once, every few runs."
+  "Run the bot just once, every few runs."
   (assert (>= (length sb-ext:*posix-argv*) 3))
-  (setf *random-state* (make-random-state t))
+  (cli-configure)
   (let ((num (parse-integer (fourth sb-ext:*posix-argv*))))
     (when (< (random num) 1)
       (microblog-bot:run-bot-once (make-microblog-bot))))
