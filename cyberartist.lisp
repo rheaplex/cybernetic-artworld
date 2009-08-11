@@ -58,22 +58,8 @@
   (cli-configure)
   (microblog-bot:run-bot (make-microblog-bot)))
 
-(defun run-n (n)
-  "Run the bot n times."
-  (let ((bot (make-microblog-bot)))
-    (dotimes (i n)
-      (microblog-bot:run-bot-once bot))))
-
-(defun run-once ()
-  "Run the bot just once."
-  (microblog-bot:run-bot-once (make-microblog-bot))
-  (sb-ext:quit))
-
-(defun run-once-randomly ()
-  "Run the bot just once, every few runs."
-  (assert (>= (length sb-ext:*posix-argv*) 3))
-  (cli-configure)
-  (let ((num (parse-integer (fourth sb-ext:*posix-argv*))))
-    (when (< (random num) 1)
-      (microblog-bot:run-bot-once (make-microblog-bot))))
-  (sb-ext:quit))
+(defun run-test (username password)
+  (require 'cyberartist)
+  (microblog-bot:set-debug)
+  (configure username password)
+  (microblog-bot:run-bot (make-microblog-bot)))

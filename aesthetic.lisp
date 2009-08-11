@@ -144,7 +144,7 @@
 
 (defun colour-description ()
   "Generate a colour description."
-  (concatenate-string (choose-randomly tone) (palette-colour) ))
+  (concatenate-string (choose-randomly tone) (colour) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Texture

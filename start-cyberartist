@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ $# -ne 2 ]; then 
+     echo "Cannot start. Pass user and password as args 1 and 2." > \
+	 /var/log/cyberartist.log
+     exit 1
+fi
+
+detachtty --dribble-file /var/log/cyberartist-dribble \
+	  --log-file /var/log/cyberartist.log \
+	  --pid-file /var/run/cyberartist.pid \
+  	  /var/run/cyberartist-socket \
+    ./cyberartist $1 $2
