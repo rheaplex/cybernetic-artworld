@@ -19,9 +19,9 @@
 (defclass cyberartist (microblog-bot:microblog-bot)
   ())
 
-(defmethod microblog-bot:constant-task ((bot cyberartist))
+(defmethod microblog-bot:intermittent-task ((bot cyberartist))
   "Dent a possible artwork."
-    (microblog-bot:post (generate-description)))
+  (microblog-bot:post (generate-description)))
 
 (defvar *username* nil)
 (defvar *password* nil)

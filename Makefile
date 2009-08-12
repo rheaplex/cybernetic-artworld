@@ -64,7 +64,7 @@ cybercollector:	aesthetic-package.lisp \
                                   	  :executable t \
                                           :toplevel #'cybercollector:run)"
 
-all: cyberartist cybercurator cybercritic cybercollector
+all: cyberartist cybercritic cybercollector # cybercurator
 
 clean:
 	rm -f cyberartist
