@@ -20,5 +20,7 @@
    "Aesthetic generation, mutation and evaluation.")
   (:use #:common-lisp)
   (:export make-aesthetic
+	   update-aesthetic
+	   describe-aesthetic
 	   generate-description
 	   critique-artwork))

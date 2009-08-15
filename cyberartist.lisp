@@ -26,10 +26,11 @@
 (defvar *username* nil)
 (defvar *password* nil)
 
-(defun configure (username password)
+(defmethod configure (username password 
+		      &optional (host "https://identi.ca/api"))
   "Configure the global state."
   (setf *random-state* (make-random-state t))
-  (microblog-bot:set-microblog-service "https://identi.ca/api" "cybernetic")
+  (microblog-bot:set-microblog-service host "cybernetic")
   (setf *username* username)
   (setf *password* password))
 
@@ -38,11 +39,6 @@
   (assert (>= (length sb-ext:*posix-argv*) 2))
   (configure (second sb-ext:*posix-argv*)
 	     (third sb-ext:*posix-argv*)))
-
-(defun debug-configure (username password)
-  "Configure from the repl, and set the state to debugging."
-  (microblog-bot:set-debug)
-  (configure username password))
 
 (defun make-microblog-bot ()
   "Make the bot."
@@ -60,6 +56,6 @@
 
 (defun run-test (username password)
   (require 'cyberartist)
-  (microblog-bot:set-debug)
-  (configure username password)
+  (microblog-bot:set-debug :post t)
+  (configure username password "http://localhost/laconica/api")
   (microblog-bot:run-bot (make-microblog-bot)))

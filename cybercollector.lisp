@@ -20,13 +20,14 @@
   ())
 
 (defun masterpiece-p (description)
+  "Is the subject of the description a masterpiece?"
   (search "masterpiece" description))
 
 (defun artwork-url (critique-text)
   "Get the artwork url from the message"
    (cl-ppcre:scan-to-strings "http://[^ ]+" critique-text))
 
-(defmethod microblog-bot:response-for-message ((bot cybercollector) mention)
+(defmethod microblog-bot:response-for-post ((bot cybercollector) mention)
   "Respond to the artwork by buying it if it's a masterpiece."
   (let ((status-text 
 	 (handler-case
@@ -43,10 +44,11 @@
 (defvar *password* nil)
 (defvar *follow* nil)
 
-(defun configure (username password follow)
+(defun configure (username password follow
+		  &optional (host "https://identi.ca/api"))
   "Configure the global state."
   (setf *random-state* (make-random-state t))
-  (microblog-bot:set-microblog-service "https://identi.ca/api" "cybercollector")
+  (microblog-bot:set-microblog-service host "cybercollector")
   (setf *username* username)
   (setf *password* password)
   (setf *follow* follow))
@@ -58,12 +60,8 @@
 	     (third sb-ext:*posix-argv*)
 	     (fourth sb-ext:*posix-argv*)))
 
-(defun debug-configure (username password follow)
-  "Configure from the repl, and set the state to debugging."
-  (microblog-bot:set-debug)
-  (configure username password follow))
-
 (defun make-microblog-bot ()
+  "Make the bot using the configuration"
   (assert (and *username* *password* *follow*))
   (make-instance 'cybercollector
 		 :nickname *username*	    
@@ -78,7 +76,8 @@
   (microblog-bot:run-bot (make-microblog-bot)))
 
 (defun run-test (username password follow)
+  "Configure and run the bot in test mode"
   (require 'cybercollector)
-  (microblog-bot:set-debug)
-  (configure username password follow)
+  (microblog-bot:set-debug :post t)
+  (configure username password follow "http://localhost/laconica/api")
   (microblog-bot:run-bot (make-microblog-bot)))

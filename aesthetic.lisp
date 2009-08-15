@@ -243,11 +243,16 @@
      aesthetic)
     (values likes dislikes)))
 
-(defun describe-aesthetic ()
+(defun describe-aesthetic (aesthetic)
   "Describe the current likes and dislikes."
   ;;FIXME - Replace the final comma with an and or ampersand.
-  (multiple-value-bind (likes dislikes) (aesthetic-opinions)
-    (format nil "I like~{ ~A~^,~}. I dislike~{ ~A~^,~}." likes dislikes)))
+  (let ((desc ""))
+  (multiple-value-bind (likes dislikes) (aesthetic-opinions aesthetic)
+    (when likes 
+      
+    (format nil "I like~{ ~A~^,~}. " likes))
+    (when dislikes
+      (format nil "I dislike~{ ~A~^,~}." dislikes)))))
 
 (defun aesthetic-size (aesthetic)
   "Get the current size of *aesthetic*."
