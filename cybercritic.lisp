@@ -20,17 +20,22 @@
   ((aesthetic :initarg :aesthetic
 	      :accessor cybercritic-aesthetic)))
 
-(defmethod microblog-bot:daily-task ((bot cybercritic))
-  "Update the aesthetic and dent it."
-  (update-aesthetic)
-  (let ((description (describe-aesthetic)))
+(defmethod post-aesthetic ((bot cybercritic))
+  "Post a description of the bot's aesthetic"
+  (let ((description 
+	 (aesthetic:describe-aesthetic (cybercritic-aesthetic bot))))
     ;; Handle description being longer than the microblogging limit of 140 chars
     (if (> (length description) 140)
 	(setf description 
 	      (format nil "~a..." (subseq description 0 137))))
-	(microblog-bot:post description)))
+    (microblog-bot:post description)))
 
-(defmethod microblog-bot:response-for-message ((bot cybercritic) mention)
+(defmethod microblog-bot:daily-task ((bot cybercritic))
+  "Update the aesthetic and dent it."
+  (aesthetic:update-aesthetic (cybercritic-aesthetic bot))
+  (post-aesthetic bot))
+
+(defmethod microblog-bot:response-for-post ((bot cybercritic) mention)
   "Respond to the artwork by critiquing it."
   (critique-artwork (cl-twit:status-text mention) 
 		    (cybercritic-aesthetic bot)
@@ -42,10 +47,11 @@
 (defvar *password* nil)
 (defvar *follow* nil)
 
-(defun configure (username password follow)
+(defun configure (username password follow
+		  &optional (host "https://identi.ca/api"))
   "Configure the global state."
   (setf *random-state* (make-random-state t))
-  (microblog-bot:set-microblog-service "https://identi.ca/api" "cybercritic")
+  (microblog-bot:set-microblog-service host "cybercritic")
   (setf *username* username)
   (setf *password* password)
   (setf *follow* follow))
@@ -57,11 +63,6 @@
 	     (third sb-ext:*posix-argv*)
 	     (fourth sb-ext:*posix-argv*)))
 
-(defun debug-configure (username password follow)
-  "Configure from the repl, and set the state to debugging."
-  (microblog-bot:set-debug)
-  (configure username password follow))
-
 (defun make-microblog-bot ()
   (assert (and *username* *password* *follow*))
   (make-instance 'cybercritic
@@ -72,13 +73,20 @@
 		 "http://robmyers.org/git/?p=cybernetic-artworld.git"
 		 :aesthetic (aesthetic:make-aesthetic)))
 
+(defun start-bot ()
+  "Make the bot, print the aesthetic, run the bot"
+  (let ((bot (make-microblog-bot)))
+    (microblog-bot:with-microblog-user bot
+      (post-aesthetic bot))
+    (microblog-bot:run-bot bot)))
+
 (defun run ()
-  "Configure and run the bot."
+  "Configure and run the bot"
   (cli-configure)
-  (microblog-bot:run-bot (make-microblog-bot)))
+  (start-bot))
 
 (defun run-test (username password follow)
   (require 'cybercritic)
-  (microblog-bot:set-debug)
-  (configure username password follow)
-  (microblog-bot:run-bot (make-microblog-bot)))
+  (microblog-bot:set-debug :post t)
+  (configure username password follow "http://localhost/laconica/api")
+  (start-bot))
