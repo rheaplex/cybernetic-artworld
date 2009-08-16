@@ -65,28 +65,23 @@
 
 (defun make-microblog-bot ()
   (assert (and *username* *password* *follow*))
-  (make-instance 'cybercritic
+  (let ((bot (make-instance 'cybercritic
 		 :nickname *username*	    
 		 :password *password*
-		 :follow-id *follow*
+		 :follow-screen-name *follow*
 		 :source-url 
 		 "http://robmyers.org/git/?p=cybernetic-artworld.git"
-		 :aesthetic (aesthetic:make-aesthetic)))
-
-(defun start-bot ()
-  "Make the bot, print the aesthetic, run the bot"
-  (let ((bot (make-microblog-bot)))
+		 :aesthetic (aesthetic:make-aesthetic))))
     (microblog-bot:with-microblog-user bot
       (post-aesthetic bot))
-    (microblog-bot:run-bot bot)))
+    bot))
 
-(defun run ()
+(defun run-cybercritic ()
   "Configure and run the bot"
   (cli-configure)
-  (start-bot))
+  (microblog-bot:run-bot bot (make-microblog-bot)))
 
-(defun run-test (username password follow)
+(defun test-run-cybercritic (username password follow)
   (require 'cybercritic)
-  (microblog-bot:set-debug :post t)
   (configure username password follow "http://localhost/laconica/api")
-  (start-bot))
+  (microblog-bot:test-run-bot (make-microblog-bot) 10 :post t))

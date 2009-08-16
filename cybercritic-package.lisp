@@ -18,4 +18,4 @@
   (:documentation
    "Cybercritic")
   (:use #:common-lisp #:aesthetic #:microblog-bot)
-  (:export run))
+  (:export run-cybercritic))

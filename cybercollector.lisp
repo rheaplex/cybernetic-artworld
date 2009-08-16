@@ -66,18 +66,17 @@
   (make-instance 'cybercollector
 		 :nickname *username*	    
 		 :password *password*
-		 :follow-id *follow*
+		 :follow-screen-name *follow*
 		 :source-url 
 		 "http://robmyers.org/git/?p=cybernetic-artworld.git"))
 
-(defun run ()
+(defun run-cybercollector ()
   "Configure and run the bot."
   (cli-configure)
   (microblog-bot:run-bot (make-microblog-bot)))
 
-(defun run-test (username password follow)
+(defun test-run-cybercollector (username password follow)
   "Configure and run the bot in test mode"
   (require 'cybercollector)
-  (microblog-bot:set-debug :post t)
   (configure username password follow "http://localhost/laconica/api")
-  (microblog-bot:run-bot (make-microblog-bot)))
+  (microblog-bot:test-run-bot (make-microblog-bot) 10 :post t))

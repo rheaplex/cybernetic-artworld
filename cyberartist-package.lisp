@@ -19,6 +19,4 @@
   (:documentation
    "Cyberartist")
   (:use #:common-lisp #:aesthetic #:microblog-bot)
-  (:export run
-	   run-once
-	   run-once-randomly))
+  (:export run-cyberartist))

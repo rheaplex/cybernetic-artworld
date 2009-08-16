@@ -49,13 +49,12 @@
 		 :ignore '("cybercritic")
 		 :source-url "http://robmyers.org/git/?p=cybernetic-artworld.git"))
 
-(defun run ()
+(defun run-cyberartist ()
   "Configure and run the bot."
   (cli-configure)
   (microblog-bot:run-bot (make-microblog-bot)))
 
-(defun run-test (username password)
+(defun test-run-cyberartist (username password)
   (require 'cyberartist)
-  (microblog-bot:set-debug :post t)
   (configure username password "http://localhost/laconica/api")
-  (microblog-bot:run-bot (make-microblog-bot)))
+  (microblog-bot:test-run-bot (make-microblog-bot) 20 :post t))
