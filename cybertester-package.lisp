@@ -1,4 +1,4 @@
-;; cybercritic-package.lisp -  The package definition(s) for cybercritic.
+;; cybertester-package.lisp -  The package definition(s) for cybertester.
 ;; Copyright (C) 2009  Rhea Myers rhea@myers.studio
 ;;
 ;; This program is free software: you can redistribute it and/or modify
@@ -14,8 +14,13 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(defpackage :cybercritic
+
+(defpackage :cybertester
   (:documentation
-   "Cybercritic")
-  (:use #:common-lisp #:aesthetic #:microblog-bot)
-  (:export run-cybercritic))
+   "Cyberartist")
+  (:use #:common-lisp #:microblog-bot
+	#:cyberartist #:cybercritic #:cybercollector)
+  (:export deterministic-tests
+	   random-tests
+	   response-tests
+	   comprehensive-tests))

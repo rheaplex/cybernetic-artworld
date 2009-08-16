@@ -18,4 +18,4 @@
   (:documentation
    "Cybercollector")
   (:use #:common-lisp #:cl-ppcre #:aesthetic #:microblog-bot)
-  (:export run))
+  (:export run-cybercollector))

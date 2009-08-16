@@ -1,4 +1,4 @@
-;; cybercritic-package.lisp -  The package definition(s) for cybercritic.
+;; cybertester.asd -  The asdf system definition for cybertester
 ;; Copyright (C) 2009  Rhea Myers rhea@myers.studio
 ;;
 ;; This program is free software: you can redistribute it and/or modify
@@ -14,8 +14,14 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(defpackage :cybercritic
-  (:documentation
-   "Cybercritic")
-  (:use #:common-lisp #:aesthetic #:microblog-bot)
-  (:export run-cybercritic))
+(require :asdf)
+
+(in-package #:asdf)
+
+(asdf:defsystem #:cybertester
+    :serial t
+    :depends-on (#:microblog-bot
+		 #:cyberartist #:cybercritic #:cybercollector)
+    :components
+    ((:file "cybertester-package")
+     (:file "cybertester")))

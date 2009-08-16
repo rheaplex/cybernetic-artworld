@@ -20,49 +20,53 @@ cyberartist:	aesthetic-package.lisp \
 		aesthetic.lisp \
 		cyberartist-package.lisp \
 		cyberartist.lisp \
-		cyberartist.asd
+		cyberartist.asd \
+		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
 	--eval "(asdf:oos 'asdf:load-op 'cyberartist)" \
 	--eval "(sb-ext:save-lisp-and-die \"cyberartist\" \
-                                  	  :executable t \
-                                          :toplevel #'cyberartist:run)"
+					  :executable t \
+                                          :toplevel #'cyberartist:run-cyberartist)"
 
 cybercurator:	aesthetic-package.lisp \
 		aesthetic.lisp \
 		cybercurator-package.lisp \
 		cybercurator.lisp \
-		cybercurator.asd
+		cybercurator.asd \
+		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
 	--eval "(asdf:oos 'asdf:load-op 'cybercurator)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercurator\" \
-                                  	  :executable t \
-                                          :toplevel #'cybercurator:run)"
+					  :executable t \
+                                          :toplevel #'cybercurator:run-cybercurator)"
 
 cybercritic:	aesthetic-package.lisp \
 		aesthetic.lisp \
 		cybercritic-package.lisp \
 		cybercritic.lisp \
-		cybercritic.asd
+		cybercritic.asd \
+		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
 	--eval "(asdf:oos 'asdf:load-op 'cybercritic)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercritic\" \
-                                  	  :executable t \
-                                          :toplevel #'cybercritic:run)"
+					  :executable t \
+                                          :toplevel #'cybercritic:run-cybercritic)"
 
 cybercollector:	aesthetic-package.lisp \
 		aesthetic.lisp \
 		cybercollector-package.lisp \
 		cybercollector.lisp \
-		cybercollector.asd
+		cybercollector.asd \
+		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
 	--eval "(asdf:oos 'asdf:load-op 'cybercollector)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercollector\" \
-                                  	  :executable t \
-                                          :toplevel #'cybercollector:run)"
+					  :executable t \
+                                          :toplevel #'cybercollector:run-cybercollector)"
 
 all: cyberartist cybercritic cybercollector # cybercurator
 
