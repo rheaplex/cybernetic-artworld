@@ -51,48 +51,20 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; @reply response testing
+;; Post creation testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun tester-post-hi (bot-name)
-  "Post hi to the bot"
-  (with-microblog-user *tester*
-    (microblog-bot:post (format nil "@~a hi" bot-name))))
-
-(defun tester-request-source (bot-name)
-  "Post a source request to the bots"
-  (with-microblog-user *tester*
-    (microblog-bot:post (format nil "@~a !source" bot-name))))
-
-(defun tester-post-his ()
-  (dolist (bot *bots*)
-    (tester-post-hi (microblog-bot:user-nickname bot))))
-
-(defun tester-request-sources ()
-  (dolist (bot *bots*)
-    (tester-request-source (microblog-bot:user-nickname bot))))
-
-(defun tester-hi-or-request-source (bot-name i)
-  "Alternate posting hi and source request to the named bot"
-  (if (= (mod i 2) 0)
-      (tester-post-hi bot-name)
-      (tester-request-source bot-name)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Catch posting errors and multiple posts of the same message text too fast
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmethod microblog-bot:post :around (message)
-  "Check for posting too fast, etc."
+(defmethod microblog-bot:post :around (message &key (in-reply-to-status-id nil))
+  "Check that the message really is posted and not repeated too fast, etc."
   (assert message)
   (assert (<= (length message) 140))
-  (handler-case
+   (handler-case
       (let* ((result (call-next-method))
 	     (result-text (cl-twit:status-text result)))
 	(assert result)
 	(assert result-text)
-	(assert (string= result-text message)))
+	(assert (string= result-text message))
+	result)
     (cl-twit:http-error (err)
       (format t "POST ERROR: ~a - " (cl-twit:http-status-code err))
       (cond
@@ -100,7 +72,89 @@
 	 (format t "multiple posts of '~a'~%" message))
 	(t (format t "~a~%" (cl-twit:http-body err)))))
     (error (err)
-      (format t "~a~%" err))))
+      (format t "POST ERROR: ~a~%" err)))
+
+(defun posts-containing-after (after text posts)
+  "return posts with id higher than after contain text"
+  (let ((matches '()))
+    (dolist (post posts)
+      (let ((post-id (cl-twit::id post)))
+	(when (and (search text (cl-twit:status-text post))
+		   (> post-id after))
+	  (push post matches))))))
+
+(defun bot-user-posts (bot)
+  "Get the bot's user's posts. This should be in microblog-bot"
+  (microblog-bot:with-microblog-user bot
+    (cl-twit:m-user-timeline)))
+
+(defun test-post-response (bot test-fun) 
+  "test-fun must return a message object"
+  (posts-containing-after (cl-twit::get-newest-id (cl-twit:m-public-timeline))
+			  (cl-twit:status-text (funcall test-fun))
+			  (bot-user-posts bot)))
+
+(defun call-with-bot (bot fun)
+  "Wrap a call to fun with rest as args with-microblog-user as bot"
+  (lambda ()
+    (microblog-bot:with-microblog-user bot
+      (funcall fun))))
+
+(defun test-post-fun (bot fun)
+  "Make sure the bot posts once. Fun must return a message object"
+  (assert (= 1
+	     (length (test-post-response bot 
+					 (lambda () 
+					   (funcall fun)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; @reply response testing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun ensure-no-responses (bot)
+  "Make sure the bot doesn't post if there are no responses to post to"
+  (let ((previous-max-id (cl-twit::get-newest-id (cl-twit:m-public-timeline))))
+    (microblog-bot:with-microblog-user bot
+      (microblog-bot::respond-to-replies bot))
+    (assert (= previous-max-id
+	       (cl-twit::get-newest-id (cl-twit:m-public-timeline))))))
+
+(defun ensure-response (bot)
+  "Make sure the bot posts in response to a @reply"
+  (let ((previous-max-id (cl-twit::get-newest-id (cl-twit:m-public-timeline))))
+    (microblog-bot:with-microblog-user bot
+      (microblog-bot::respond-to-replies bot))
+    (assert (= 1
+	       (- (cl-twit::get-newest-id (cl-twit:m-public-timeline))
+		  previous-max-id)))))
+
+(defun tester-post-hi (bot-name)
+  "Post hi to the bot"
+  (microblog-bot:with-microblog-user *tester*
+    (microblog-bot:post (format nil "@~a hi" bot-name))))
+
+(defun tester-request-source (bot-name)
+  "Post a source request to the bots"
+  (microblog-bot:with-microblog-user *tester*
+    (microblog-bot:post (format nil "@~a !source" bot-name))))
+
+(defun test-his ()
+  "Make sure the bots respond to a simple response"
+  (dolist (bot *bots*)
+    (tester-post-hi (microblog-bot:user-nickname bot))
+    (ensure-response bot)))
+
+(defun test-sources ()
+  "Make sure the bots respond to a source request"
+  (dolist (bot *bots*)
+    (tester-request-source (microblog-bot:user-nickname bot))
+    (ensure-response bot)))
+
+(defun clear-responses ()
+  "Respond to any responses"
+  (dolist (bot *bots*)
+  (microblog-bot:with-microblog-user bot
+    (microblog-bot::respond-to-replies bot))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -122,7 +176,7 @@
     (check-and-add hash (cl-twit::id item) capacity)))
 
 (defun check-and-update-handled-messages (bot)
-  (with-microblog-user bot
+  (microblog-bot:with-microblog-user bot
     ;; May skip in tight timing situations, but should catch gross errors
     (check-and-add-list *replies-handled* (microblog-bot::new-replies bot)
 			"replies")
@@ -139,46 +193,43 @@
 (defun initialize ()
   "Set up the fixtures and state for tests"
   (microblog-bot:set-microblog-service "http://localhost/laconica/api" "tester")
-  (initialize-bots)
-  (with-microblog-user *tester*
-    (microblog-bot:post "STARTING TEST RUN --------------------")))
+  (initialize-bots))
 
-(defun run-test (bot)
+(defmethod response-tests ()
+  "Test response and source requests"
+  (clear-responses)
+  (test-his)
+  (test-sources)
+  (dolist (bot *bots*)
+      (ensure-no-responses bot)))
+
+(defun run-test (bot i)
   "Test the bot, sending it a hi or source request and running it once"
   (check-and-update-handled-messages bot)
-  (microblog-bot:test-run-bot-once bot :post t :msgs nil))
+  (microblog-bot:test-run-bot-once bot :i i :post t :msgs nil))
 
 (defmethod deterministic-tests (&optional (count 10))
   "Test the newly made bots in order count times"
-  (initialize)
   (dotimes (i count)
     (dolist (bot *bots*)
-      (run-test bot))))
+      (run-test bot i))))
 
 (defun choose-randomly (choices)
   "Choose one of the parameters randomly."
   (nth (random (list-length choices)) 
        choices))
 
-(defmethod response-tests (&optional (count 1))
-  "Test response and source requests"
-  (tester-post-his)
-  (dolist (bot *bots*)
-    (with-microblog-user bot
-      (microblog-bot::respond-to-replies bot)))
-  (tester-request-sources)
-  (dolist (bot *bots*)
-    (with-microblog-user bot
-      (microblog-bot::respond-to-replies bot))))
-
 (defmethod random-tests (&optional (count 10))
   "Test the bots in random order, with random hi and !source messages"
-  (initialize)
   (dotimes (i count)
-    (run-test (choose-randomly *bots*))))
+    (run-test (choose-randomly *bots*) i)))
 
 (defmethod comprehensive-tests (&optional (count 1))
   "Run all test styles"
+  (microblog-bot:with-microblog-user *tester*
+    (microblog-bot:post "STARTING TEST RUN --------------------"))
   (response-tests)
-  (deterministic-tests)
-  (random-tests))
+  (deterministic-tests count)
+  (random-tests count))
+
+(initialize)
