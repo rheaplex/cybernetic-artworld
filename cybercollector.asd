@@ -14,11 +14,11 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require :asdf)
 
-(in-package #:asdf)
+(defpackage cybercollector-system (:use #:cl #:asdf))
+(in-package :cybercollector-system)
 
-(asdf:defsystem #:cybercollector
+(defsystem "cybercollector"
     :serial t
     :depends-on (#:cl-ppcre #:aesthetic #:microblog-bot)
     :components

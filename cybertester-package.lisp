@@ -15,9 +15,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-(defpackage :cybertester
-  (:documentation
-   "Cyberartist")
+(defpackage cybertester
+  (:documentation "Cybertester")
   (:use #:common-lisp #:microblog-bot
 	#:cyberartist #:cybercritic #:cybercollector)
   (:export deterministic-tests
