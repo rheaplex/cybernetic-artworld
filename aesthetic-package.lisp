@@ -15,7 +15,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-(defpackage :aesthetic
+(defpackage aesthetic
   (:documentation
    "Aesthetic generation, mutation and evaluation.")
   (:use #:common-lisp)

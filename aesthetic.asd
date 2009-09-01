@@ -14,11 +14,10 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require :asdf)
+(defpackage aesthetic-system (:use #:cl #:asdf))
+(in-package :aesthetic-system)
 
-(in-package #:asdf)
-
-(asdf:defsystem #:aesthetic
+(defsystem "aesthetic"
     :serial t
     :components
     ((:file "aesthetic-package")
