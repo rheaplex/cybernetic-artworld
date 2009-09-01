@@ -14,7 +14,7 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package #:aesthetic)
+(in-package :aesthetic)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utilities
@@ -248,11 +248,12 @@
   ;;FIXME - Replace the final comma with an and or ampersand.
   (let ((desc ""))
   (multiple-value-bind (likes dislikes) (aesthetic-opinions aesthetic)
-    (when likes 
+    (let ((likes-string (when likes 
       
-    (format nil "I like~{ ~A~^,~}. " likes))
-    (when dislikes
-      (format nil "I dislike~{ ~A~^,~}." dislikes)))))
+			  (format nil "I like~{ ~A~^,~}. " likes)))
+	  (dislikes-string(when dislikes
+			    (format nil "I dislike~{ ~A~^,~}." dislikes))))
+      (values likes-string dislikes-string)))))
 
 (defun aesthetic-size (aesthetic)
   "Get the current size of *aesthetic*."
