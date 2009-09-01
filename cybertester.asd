@@ -14,11 +14,10 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require :asdf)
+(defpackage cybertester-system (:use #:cl #:asdf))
+(in-package :cybertester-system)
 
-(in-package #:asdf)
-
-(asdf:defsystem #:cybertester
+(defsystem "cybertester"
     :serial t
     :depends-on (#:microblog-bot
 		 #:cyberartist #:cybercritic #:cybercollector)

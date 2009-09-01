@@ -19,7 +19,7 @@
 ;; Do not, under any circumstances, modify to point at a live server
 
 
-(in-package #:cybertester)
+(in-package :cybertester)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -72,7 +72,7 @@
 	 (format t "multiple posts of '~a'~%" message))
 	(t (format t "~a~%" (cl-twit:http-body err)))))
     (error (err)
-      (format t "POST ERROR: ~a~%" err)))
+      (format t "POST ERROR: ~a~%" err))))
 
 (defun posts-containing-after (after text posts)
   "return posts with id higher than after contain text"

@@ -15,7 +15,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-(defpackage :cyberartist
+(defpackage cyberartist
   (:documentation
    "Cyberartist")
   (:use #:common-lisp #:aesthetic #:microblog-bot)

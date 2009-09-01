@@ -14,11 +14,11 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require :asdf)
 
-(in-package #:asdf)
+(defpackage cybercritic-system (:use #:cl #:asdf))
+(in-package :cybercritic-system)
 
-(asdf:defsystem #:cybercritic
+(defsystem "cybercritic"
     :serial t
     :depends-on (#:aesthetic #:microblog-bot)
     :components

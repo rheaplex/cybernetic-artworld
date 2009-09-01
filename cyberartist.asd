@@ -14,11 +14,10 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require :asdf)
+(defpackage cyberartist-system (:use #:cl #:asdf))
+(in-package :cyberartist-system)
 
-(in-package #:asdf)
-
-(asdf:defsystem #:cyberartist
+(defsystem "cyberartist"
     :serial t
     :depends-on (#:aesthetic #:microblog-bot)
     :components
