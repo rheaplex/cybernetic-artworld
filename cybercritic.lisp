@@ -22,13 +22,22 @@
 
 (defmethod post-aesthetic ((bot cybercritic))
   "Post a description of the bot's aesthetic"
-  (let ((description 
-	 (aesthetic:describe-aesthetic (cybercritic-aesthetic bot))))
-    ;; Handle description being longer than the microblogging limit of 140 chars
-    (if (> (length description) 140)
-	(setf description 
-	      (format nil "~a..." (subseq description 0 137))))
-    (microblog-bot:post description)))
+  (multiple-value-bind (good bad) 
+      (aesthetic:describe-aesthetic (cybercritic-aesthetic bot))
+    (let ((desc (concatenate 'string good " " bad)))
+      ;; If the description is short enough to post all in one go, do so
+      (if (<= (length desc) 140)
+	  (microblog-bot:post desc)
+	  ;; Otherwise post in two sections, truncating if they are too long
+	  (progn
+	    (when (> (length good) 140)
+	      (setf good 
+		    (format nil "~a..." (subseq good 0 137))))
+	    (microblog-bot:post good)
+	    (when (> (length bad) 140)
+	      (setf bad 
+		    (format nil "~a..." (subseq bad 0 137))))
+	    (microblog-bot:post bad))))))
 
 (defmethod microblog-bot:daily-task ((bot cybercritic))
   "Update the aesthetic and dent it."
@@ -79,7 +88,7 @@
 (defun run-cybercritic ()
   "Configure and run the bot"
   (cli-configure)
-  (microblog-bot:run-bot bot (make-microblog-bot)))
+  (microblog-bot:run-bot (make-microblog-bot)))
 
 (defun test-run-cybercritic (username password follow)
   (require 'cybercritic)
