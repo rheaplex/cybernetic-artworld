@@ -19,12 +19,22 @@
 ;; Do not, under any circumstances, modify to point at a live server
 
 
-(in-package :cybertester)
+(in-package "CYBERTESTER")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utilities
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun spin ()
+  (format t "."))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The bots for testing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defparameter +test-host+ "http://laconica.local/api")
 
 (defvar *bots* nil
   "The bots to test")
@@ -37,13 +47,13 @@
   (setf *bots* '())
   ;; Add in reverse order so dolist goes from artist to collector
   (cybercollector::configure "cybercollector" "password" "cybercritic"
-			     "http://localhost/laconica/api")
+			     +test-host+)
   (push (cybercollector::make-microblog-bot) *bots*)
   (cybercritic::configure "cybercritic" "password" "cybernetic"
-			  "http://localhost/laconica/api")
+			  +test-host+)
   (push (cybercritic::make-microblog-bot) *bots*)
   (cyberartist::configure "cybernetic" "password" 
-			  "http://localhost/laconica/api")
+			  +test-host+)
   (push (cyberartist::make-microblog-bot) *bots*)
   (setf *tester* (make-instance 'microblog-bot:microblog-user 
 				:nickname "tester"
@@ -63,16 +73,17 @@
 	     (result-text (cl-twit:status-text result)))
 	(assert result)
 	(assert result-text)
-	(assert (string= result-text message))
+	(when (not (string= result-text message))
+	  (format t "POST ERROR: ~a<-->~a~%" message result-text))
 	result)
     (cl-twit:http-error (err)
       (format t "POST ERROR: ~a - " (cl-twit:http-status-code err))
       (cond
 	((search "duplicate" (cl-twit:http-body err))
 	 (format t "multiple posts of '~a'~%" message))
-	(t (format t "~a~%" (cl-twit:http-body err)))))
+	(t (format t "(message: ~a) ~a~%" message (cl-twit:http-body err)))))
     (error (err)
-      (format t "POST ERROR: ~a~%" err))))
+      (format t "POST ERROR (message: ~a): ~a~%" message err))))
 
 (defun posts-containing-after (after text posts)
   "return posts with id higher than after contain text"
@@ -141,20 +152,23 @@
 (defun test-his ()
   "Make sure the bots respond to a simple response"
   (dolist (bot *bots*)
+    (spin)
     (tester-post-hi (microblog-bot:user-nickname bot))
     (ensure-response bot)))
 
 (defun test-sources ()
   "Make sure the bots respond to a source request"
   (dolist (bot *bots*)
+    (spin)
     (tester-request-source (microblog-bot:user-nickname bot))
     (ensure-response bot)))
 
 (defun clear-responses ()
   "Respond to any responses"
   (dolist (bot *bots*)
-  (microblog-bot:with-microblog-user bot
-    (microblog-bot::respond-to-replies bot))))
+    (spin)
+    (microblog-bot:with-microblog-user bot
+      (microblog-bot::respond-to-replies bot))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -190,15 +204,19 @@
 ;; Running test sequences on bots
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 (defun initialize ()
   "Set up the fixtures and state for tests"
-  (microblog-bot:set-microblog-service "http://localhost/laconica/api" "tester")
+  (microblog-bot:set-microblog-service +test-host+ "tester")
   (initialize-bots))
 
 (defmethod response-tests ()
   "Test response and source requests"
+  (format t "~%response-tests")
   (clear-responses)
+  (spin)
   (test-his)
+  (spin)
   (test-sources)
   (dolist (bot *bots*)
       (ensure-no-responses bot)))
@@ -211,7 +229,9 @@
 (defmethod deterministic-tests (&optional (count 10))
   "Test the newly made bots in order count times"
   (dotimes (i count)
+    (format t "~%deterministic-tests")
     (dolist (bot *bots*)
+      (spin)
       (run-test bot i))))
 
 (defun choose-randomly (choices)
@@ -221,7 +241,9 @@
 
 (defmethod random-tests (&optional (count 10))
   "Test the bots in random order, with random hi and !source messages"
+  (format t "~%random-tests")
   (dotimes (i count)
+    (spin)
     (run-test (choose-randomly *bots*) i)))
 
 (defmethod comprehensive-tests (&optional (count 1))
