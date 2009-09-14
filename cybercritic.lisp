@@ -44,6 +44,12 @@
   (aesthetic:update-aesthetic (cybercritic-aesthetic bot))
   (post-aesthetic bot))
 
+(defmethod microblog-bot:filter-posts ((bot cybercritic) posts)
+  "Ignore @replies."
+  (loop for post in posts
+       if (not (response-p bot post))
+       collect post))
+
 (defmethod microblog-bot:response-for-post ((bot cybercritic) mention)
   "Respond to the artwork by critiquing it."
   (critique-artwork (cl-twit:status-text mention) 
