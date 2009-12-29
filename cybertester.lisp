@@ -19,7 +19,7 @@
 ;; Do not, under any circumstances, modify to point at a live server
 
 
-(in-package "CYBERTESTER")
+(in-package :cybertester)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -46,15 +46,19 @@
   "Make the bots we use"
   (setf *bots* '())
   ;; Add in reverse order so dolist goes from artist to collector
+  (format t "Making cybercollector~%")
   (cybercollector::configure "cybercollector" "password" "cybercritic"
 			     +test-host+)
   (push (cybercollector::make-microblog-bot) *bots*)
+  (format t "Making cybercritic~%")
   (cybercritic::configure "cybercritic" "password" "cybernetic"
 			  +test-host+)
   (push (cybercritic::make-microblog-bot) *bots*)
+  (format t "Making cyberartist~%")
   (cyberartist::configure "cybernetic" "password" 
 			  +test-host+)
   (push (cyberartist::make-microblog-bot) *bots*)
+  (format t "Making tester~%")
   (setf *tester* (make-instance 'microblog-bot:microblog-user 
 				:nickname "tester"
 				:password "password")))
@@ -68,8 +72,10 @@
   "Check that the message really is posted and not repeated too fast, etc."
   (assert message)
   (assert (<= (length message) 140))
-   (handler-case
-      (let* ((result (call-next-method))
+  (handler-case
+      (let* ((result (call-next-method message 
+				       :in-reply-to-status-id 
+				       in-reply-to-status-id))
 	     (result-text (cl-twit:status-text result)))
 	(assert result)
 	(assert result-text)

@@ -16,7 +16,7 @@
 
 (in-package :cyberartist)
 
-(defclass cyberartist (microblog-bot:microblog-bot)
+(defclass cyberartist (microblog-bot:intermittent-task-bot)
   ())
 
 (defmethod microblog-bot:intermittent-task ((bot cyberartist))
