@@ -19,7 +19,13 @@
   (:documentation
    "Aesthetic generation, mutation and evaluation.")
   (:use #:common-lisp)
-  (:export make-aesthetic
+  (:export make-properties
+	   update-properties
+	   describe-properties
+	   evaluate-properties
+	   make-aesthetic
+	   serialise-aesthetic
+	   deserialise-aesthetic
 	   update-aesthetic
 	   describe-aesthetic
 	   generate-description

@@ -16,9 +16,25 @@
 
 (in-package :cybercritic)
 
-(defclass cybercritic (microblog-bot:microblog-follower-bot)
+(defclass cybercritic (microblog-bot:daily-task-bot
+		       microblog-bot:microblog-follower-bot)
   ((aesthetic :initarg :aesthetic
 	      :accessor cybercritic-aesthetic)))
+
+(defmethod serialise ((bot cybercritic))
+  "Serialise the bot to the alist"
+  (call-next-method)
+  (list* (cons 'cybercritic-aesthetic 
+	       (aesthetic:serialise-aesthetic (cybercritic-aesthetic bot)))
+	 (call-next-method)))
+
+(defmethod deserialise ((bot cybercritic) alist)
+  "Deserialise the bot from the alist, providing defaults when value absent"
+  (call-next-method)
+  (setf (cybercritic-aesthetic bot) 
+	(or (aesthetic:deserialise-aesthetic (assoc 'cybercritic-aesthetic 
+						    alist))
+			    (aesthetic:make-aesthetic))))
 
 (defmethod post-aesthetic ((bot cybercritic))
   "Post a description of the bot's aesthetic"

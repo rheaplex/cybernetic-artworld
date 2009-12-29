@@ -44,12 +44,12 @@
   (+ (random (- to from))
      from))
 
-(defmethod choose-one-of ((possibilities list))
+(defun choose-one-of (possibilities)
   "Choose one or none of the option"
   (nth (random (length possibilities)) possibilities))
 
 ;;FIXME Force unique choices
-(defmethod choose-n-of ((n integer) (choice-list list))
+(defun choose-n-of (n choice-list)
   "Choose n different entries from choice-list."
   (assert (<= n (length choice-list)))
   (let ((choices choice-list)
@@ -97,7 +97,7 @@
   "Is the vector empty?"
   (= (length vec) 0))
 
-(defmethod tokenize-string ((source string) (separators string))
+(defun tokenize-string (source separators)
   "Tokenize string to produce words separated by runs of separators."
   (let ((words (make-string-stretchy-vector))
 	(chars (make-char-stretchy-vector)))
@@ -227,10 +227,32 @@
 ;; Aesthetics
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defparameter +min-properties+ 4)
+(defparameter +max-properties+ 12)
+(defparameter +max-properties-to-delete+ 2)
+(defparameter +max-properties-to-mutate+ 2)
+(defparameter +max-properties-to-add+ 2)
+
 (defun list-aesthetic (aesthetic)
   "Gather the property names without their values."
   (loop for key being each hash-key of aesthetic
        collect key))
+
+(defun serialise-aesthetic (aesthetic)
+  "Make a serialisable representation of the aesthetic"
+  (let ((representation '()))
+    (maphash #'(lambda (key val)
+		 (push (cons key val) representation))
+	     aesthetic)
+    representation))
+
+(defun deserialise-aesthetic (aesthetic-alist)
+  "Turn a serialised aethetic into a hashtable"
+  (let ((aesthetic (make-hash-table :test 'equal)))
+    (dolist (property-pair aesthetic-alist)
+      (setf (gethash (car property-pair) aesthetic)
+	    (cdr property-pair)))
+    aesthetic))
 
 (defun aesthetic-opinions (aesthetic)
   "Sort the properties into likes and dislikes."
@@ -246,54 +268,69 @@
 (defun describe-aesthetic (aesthetic)
   "Describe the current likes and dislikes."
   ;;FIXME - Replace the final comma with an and or ampersand.
-  (let ((desc ""))
   (multiple-value-bind (likes dislikes) (aesthetic-opinions aesthetic)
     (let ((likes-string (when likes 
-      
 			  (format nil "I like~{ ~A~^,~}. " likes)))
 	  (dislikes-string(when dislikes
 			    (format nil "I dislike~{ ~A~^,~}." dislikes))))
-      (values likes-string dislikes-string)))))
+      (values likes-string dislikes-string))))
 
 (defun aesthetic-size (aesthetic)
   "Get the current size of *aesthetic*."
   (hash-table-count aesthetic))
 
-(defun new-property ()
+(defun make-property ()
   "Choose a new property."
   (funcall (choose-one-of (list #'shape #'colour #'texture))))
 
-(defun new-properties (count)
+(defun make-properties (count)
   "Choose n properties."
   (loop for i below count
-       collect (new-property)))
+       collect (make-property)))
 
-(defun set-property (aesthetic prop)
+(defun add-properties (properties)
+  "Add zero or more properties."
+  (append properties 
+	  (make-properties (min (max +min-properties+ 
+				     (random +max-properties-to-add+))
+				(- +max-properties+ (length properties))))))
+
+(defun delete-properties (properties)
+  "Delete 0+ properties, don't reduce properties below +min-properties+."
+  (subseq properties 0 (max (- (length properties)
+			       (random +max-properties-to-mutate+))
+			    +min-properties+)))  
+
+(defun update-properties (properties)
+  "Add some properties, delete some properties"
+  (add-properties (delete-properties properties)))
+
+(defun describe-properties (properties)
+  "List the properties in a comma-delimited string"
+  (format nil "~{ ~A~^,~}" properties))
+
+(defun evaluate-properties (properties1 properties2)
+  "Find how many properties match"
+  (length (intersection properties1 properties2)))
+
+(defun set-aesthetic-property (aesthetic prop)
   "Set valenced property."
     (setf (gethash prop aesthetic)
 	  (plus-or-minus-one)))
 
-(defun set-properties (aesthetic props)
+(defun set-aesthetic-properties (aesthetic props)
   "Set valenced properties."
   (dolist (prop props)
-    (set-property aesthetic prop))
+    (set-aesthetic-property aesthetic prop))
   aesthetic)
-
-(defparameter +min-properties+ 4)
-
-(defparameter +max-properties+ 12)
 
 (defun make-aesthetic ()
   "Generate an initial set of properties."
-  (set-properties (make-hash-table :test 'equal)
-		  (new-properties (random-range +min-properties+
-						+max-properties+))))
+  (set-aesthetic-properties (make-hash-table :test 'equal)
+		  (make-properties (random-range +min-properties+
+						 +max-properties+))))
 
-(defparameter +max-properties-to-delete+ 2)
-(defparameter +max-properties-to-mutate+ 2)
-(defparameter +max-properties-to-add+ 2)
-
-(defun delete-properties (aesthetic)
+(defun delete-aesthetic-properties (aesthetic)
   "Delete 0+ properties, don't reduce properties below +min-properties+."
   ;;FIXME - Set the correct number here rather than checking with when
   (dolist (prop (choose-n-of (random +max-properties-to-mutate+)
@@ -302,7 +339,19 @@
 	       (remhash prop aesthetic)))
   aesthetic)
 
-(defun mutate-properties (aesthetic)
+(defun add-aesthetic-properties (aesthetic)
+  "Add zero or more properties."
+  (loop with remaining = (min (max +min-properties+ 
+				   (random +max-properties-to-add+))
+			      (- +max-properties+ (aesthetic-size aesthetic)))
+	while (> remaining 0)
+	do (let ((prop (make-property)))
+	     (when (not (gethash prop aesthetic))
+	       (set-aesthetic-property aesthetic prop)
+	       (decf remaining))))
+  aesthetic)
+
+(defun mutate-aesthetic-properties (aesthetic)
   "Mutate zero or more properties."
   (dolist (prop (choose-n-of (random +max-properties-to-mutate+)
 			     (list-aesthetic aesthetic)))
@@ -310,21 +359,11 @@
 	  (- (gethash prop aesthetic))))
   aesthetic) 
 
-(defun add-properties (aesthetic)
-  "Add zero or more properties."
-  (loop with remaining = (min (max +min-properties+ 
-				   (random +max-properties-to-add+))
-			      (- +max-properties+ (aesthetic-size aesthetic)))
-	while (> remaining 0)
-	do (let ((prop (new-property)))
-	     (when (not (gethash prop aesthetic))
-	       (set-property aesthetic prop)
-	       (decf remaining))))
-  aesthetic)
-
 (defun update-aesthetic (aesthetic)
   "Update the aesthetic."
-  (add-properties (mutate-properties(delete-properties aesthetic))))
+  (add-aesthetic-properties 
+   (mutate-aesthetic-properties
+    (delete-aesthetic-properties aesthetic))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Critique
