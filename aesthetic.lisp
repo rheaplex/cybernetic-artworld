@@ -48,7 +48,6 @@
   "Choose one or none of the option"
   (nth (random (length possibilities)) possibilities))
 
-;;FIXME Force unique choices
 (defun choose-n-of (n choice-list)
   "Choose n different entries from choice-list."
   (assert (<= n (length choice-list)))
