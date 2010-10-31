@@ -43,17 +43,17 @@
     (let ((desc (concatenate 'string good " " bad)))
       ;; If the description is short enough to post all in one go, do so
       (if (<= (length desc) 140)
-	  (microblog-bot:post desc)
+	  (microblog-bot:queue-update desc)
 	  ;; Otherwise post in two sections, truncating if they are too long
 	  (progn
 	    (when (> (length good) 140)
 	      (setf good 
 		    (format nil "~a..." (subseq good 0 137))))
-	    (microblog-bot:post good)
+	    (microblog-bot:queue-update good)
 	    (when (> (length bad) 140)
 	      (setf bad 
 		    (format nil "~a..." (subseq bad 0 137))))
-	    (microblog-bot:post bad))))))
+	    (microblog-bot:queue-update bad))))))
 
 (defmethod microblog-bot:daily-task ((bot cybercritic))
   "Update the aesthetic and dent it."
