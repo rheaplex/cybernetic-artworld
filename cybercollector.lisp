@@ -36,7 +36,7 @@
 	     (microblog-bot:report-error "response-for-message ~a - ~a~%" 
 					 bot err)))))
     (if (and status-text
-	     (masterpiece-p (cl-twit:status-text mention)))
+	     (masterpiece-p status-text))
 	(format nil "I just bought ~a" (artwork-url status-text))
 	nil)))
 

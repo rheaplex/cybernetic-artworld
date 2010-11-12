@@ -21,7 +21,7 @@
 
 (defmethod microblog-bot:intermittent-task ((bot cyberartist))
   "Dent a possible artwork."
-  (microblog-bot:queue-update (generate-description)))
+  (microblog-bot:queue-update bot (generate-description)))
 
 (defvar *username* nil)
 (defvar *password* nil)

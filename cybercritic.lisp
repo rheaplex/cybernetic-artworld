@@ -43,17 +43,17 @@
     (let ((desc (concatenate 'string good " " bad)))
       ;; If the description is short enough to post all in one go, do so
       (if (<= (length desc) 140)
-	  (microblog-bot:queue-update desc)
+	  (microblog-bot:queue-update bot desc)
 	  ;; Otherwise post in two sections, truncating if they are too long
 	  (progn
 	    (when (> (length good) 140)
 	      (setf good 
 		    (format nil "~a..." (subseq good 0 137))))
-	    (microblog-bot:queue-update good)
+	    (microblog-bot:queue-update bot good)
 	    (when (> (length bad) 140)
 	      (setf bad 
 		    (format nil "~a..." (subseq bad 0 137))))
-	    (microblog-bot:queue-update bad))))))
+	    (microblog-bot:queue-update bot bad))))))
 
 (defmethod microblog-bot:daily-task ((bot cybercritic))
   "Update the aesthetic and dent it."
@@ -104,7 +104,9 @@
 		 "http://robmyers.org/git/?p=cybernetic-artworld.git"
 		 :aesthetic (aesthetic:make-aesthetic))))
     (microblog-bot:with-microblog-user bot
-      (post-aesthetic bot))
+      (post-aesthetic bot)
+      ;; Publish the aesthetic straight away
+      (microblog-bot::post-updates bot))
     bot))
 
 (defun run-cybercritic ()
