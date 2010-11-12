@@ -24,6 +24,10 @@ cyberartist:	aesthetic-package.lisp \
 		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
+	--eval "(load \"../microblog-bot/cl-twit/cl-twit.asd\")" \
+	--eval "(load \"../microblog-bot/microblog-bot.asd\")" \
+	--eval "(load \"aesthetic.asd\")" \
+	--eval "(load \"cyberartist.asd\")" \
 	--eval "(asdf:oos 'asdf:load-op 'cyberartist)" \
 	--eval "(sb-ext:save-lisp-and-die \"cyberartist\" \
 					  :executable t \
@@ -37,6 +41,10 @@ cybercurator:	aesthetic-package.lisp \
 		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
+	--eval "(load \"../microblog-bot/cl-twit/cl-twit.asd\")" \
+	--eval "(load \"../microblog-bot/microblog-bot.asd\")" \
+	--eval "(load \"aesthetic.asd\")" \
+	--eval "(load \"cybercurator.asd\")" \
 	--eval "(asdf:oos 'asdf:load-op 'cybercurator)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercurator\" \
 					  :executable t \
@@ -50,6 +58,10 @@ cybercritic:	aesthetic-package.lisp \
 		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
+	--eval "(load \"../microblog-bot/cl-twit/cl-twit.asd\")" \
+	--eval "(load \"../microblog-bot/microblog-bot.asd\")" \
+	--eval "(load \"aesthetic.asd\")" \
+	--eval "(load \"cybercritic.asd\")" \
 	--eval "(asdf:oos 'asdf:load-op 'cybercritic)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercritic\" \
 					  :executable t \
@@ -63,6 +75,10 @@ cybercollector:	aesthetic-package.lisp \
 		../microblog-bot/microblog-bot.lisp
 	sbcl --noinform \
 	--eval "(require 'asdf)" \
+	--eval "(load \"../microblog-bot/cl-twit/cl-twit.asd\")" \
+	--eval "(load \"../microblog-bot/microblog-bot.asd\")" \
+	--eval "(load \"aesthetic.asd\")" \
+	--eval "(load \"cybercollector.asd\")" \
 	--eval "(asdf:oos 'asdf:load-op 'cybercollector)" \
 	--eval "(sb-ext:save-lisp-and-die \"cybercollector\" \
 					  :executable t \
